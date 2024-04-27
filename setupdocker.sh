@@ -52,7 +52,7 @@ else
 	esac
 fi
 
-CONTAINER_IFNAME=${CONTAINER_IFNAME:-eth0}
+CONTAINER_IFNAME=${CONTAINER_IFNAME:-eth1}
 
 [ ! -d /var/run/netns ] && mkdir -p /var/run/netns
 CONTAINER_NS=$(docker inspect --format='{{ .NetworkSettings.SandboxKey }}' $CONTAINER_NAME)

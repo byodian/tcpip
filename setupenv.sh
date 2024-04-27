@@ -78,7 +78,7 @@ docker exec -it svr4 ip route add default via 140.252.13.33 dev eth1
 #对于svr4来讲，要访问p2p网关，需要添加下面的路由表
 docker exec -it svr4 ip route add 140.252.13.64/27 via 140.252.13.35 dev eth1
 
-#这个时候，从slip是可以ping的通下面的所有的节点的。
+#这个时候，从slip是可以ping的通net2的所有节点的。
 
 #添加从sun到netb的点对点网络
 echo "add p2p from sun to netb"
@@ -107,7 +107,7 @@ docker exec -it sun ip route add default via 140.252.1.4 dev sunside
 #在netb里面，对外访问的默认路由是1.4
 docker exec -it netb ip route add default via 140.252.1.4 dev eth1
 
-#在netb里面，p2p这面可以没有IP地址，但是需要配置路由规则，访问到下面的二层网络
+#在netb里面，p2p这面可以没有IP地址，但是需要配置路由规则，访问到下面net2的二层网络
 docker exec -it netb ip link set netbside up
 docker exec -it netb ip route add 140.252.1.29/32 dev netbside
 docker exec -it netb ip route add 140.252.13.32/27 via 140.252.1.29 dev netbside
@@ -176,8 +176,9 @@ ip addr add 140.252.104.1/24 dev gatewayout
 ip link set gatewayout up
 
 #一面塞到gateway的网络的namespace里面
-DOCKERPID5=$(docker inspect '--format={{ .State.Pid }}' gateway)
-ln -s /proc/${DOCKERPID5}/ns/net /var/run/netns/${DOCKERPID5}
+CONTAINER_NS_5=$(docker inspect --format='{{ .NetworkSettings.SandboxKey }}' gateway)
+DOCKERPID5=$(basename $CONTAINER_NS_5)
+ln -s "$CONTAINER_NS_5" "/var/run/netns/$DOCKERPID5"
 ip link set gatewayin netns ${DOCKERPID5}
 
 #给gateway里面的网卡添加地址
