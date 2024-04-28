@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 # 安装 OpenSSH 服务器
-RUN apt-get -y update && apt-get install -y iproute2 iputils-arping net-tools tcpdump curl telnet iputils-tracepath traceroute openssh-server
+RUN apt-get -y update && apt-get install -y iproute2 iputils-arping net-tools tcpdump curl telnet iputils-tracepath traceroute openssh-server iputils-ping
 
 # 创建 SSH 服务器所需的目录
 RUN mkdir /var/run/sshd
