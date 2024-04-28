@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 IFNAME=$1
 CONTAINER_NAME=$2
 IPADDR=$3
@@ -17,41 +20,11 @@ die () {
 }
 
 installed() {
-	command -v "$1" >/dev/null 2>&1
+	command -v "$1" > /dev/null 2>&1
 }
 
-# First step: determine type of first argument (bridge, physical interface...)
-if [ -d "/sys/class/net/$IFNAME" ]
-then
-	if [ -d "/sys/class/net/$IFNAME/bridge" ]; then
-		IFTYPE=bridge
-		BYTYPE=linux
-	elif installed ovs-vsctl && ovs-vsctl list-br|grep -q "^${IFNAME}&"; then
-		IFTYPE=bridge
-		BYTYPE=openvswitch
-	elif [ "$(cat "/sys/class/net/$IFNAME/type")" -eq 32 ]; then # Infiniband IPoIB interface type 32
-	      IFTYPE=ipoib
-	      # The IPoIB kernel module is fussy, set device name to ib0 if not overridden
-	      CONTAINER_IFNAME=${CONTAINER_IFNAME:-ib0}
-	else IFTYPE=phys
-	fi
-else
-	case "$IFTYPE" in
-		br*)
-			IFTYPE=bridge
-			BRTYPE=linux
-			;;
-		ovs*)
-			if ! installed ovs-vsctl; then
-				die 1 "Need OVS installed on the system to create an ovs bridge"
-			fi
-			IFTYPE=bridge
-			BYTYPE=openvswitch
-			;;
-		*) die 1 "I do not know how to setup interface $IFNAME.";;
-	esac
-fi
-
+IFTYPE=bridge
+BYTYPE=openvswitch
 CONTAINER_IFNAME=${CONTAINER_IFNAME:-eth1}
 
 [ ! -d /var/run/netns ] && mkdir -p /var/run/netns
@@ -71,7 +44,7 @@ MTU=$(ip link show "$IFNAME" | awk '{print $5}')
 
 	case "$BYTYPE" in
 		linux)
-			(ip link set "$LOCAL_IFNAME" master "IFNAME" >/dev/null 2>&1) || (brctl addif "$IFNAME" "$LOCAL_IFNAME")
+			(ip link set "$LOCAL_IFNAME" master "IFNAME" > /dev/null 2>&1) || (brctl addif "$IFNAME" "$LOCAL_IFNAME")
 			;;
 		openvswitch)
 			ovs-vsctl add-port "$IFNAME" "$LOCAL_IFNAME" ${VLAN:+tag="$VLAN"}

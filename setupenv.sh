@@ -1,9 +1,56 @@
 #!/bin/bash
 
+set -e
+
+publiceth=$1
 imagename=$2
 
-echo "create all containers"
+delete_container () {
+	container_name="$1"
+	if docker ps -a --format '{{.Names}}' | grep -q "$container_name"; then
+		docker rm -f "$container_name"
+	else
+		echo "容器 $container_name 不存在，无需删除"
+	fi
 
+}
+
+delete_network() {
+	network_name="$1"
+	if ip link show | grep -q "$network_name"; then
+		ip link delete dev "$network_name"
+	else
+		echo "网络 $network_name 不存在，无需删除。"
+	fi
+}
+
+delete_br() {
+	br_name="$1"
+	if ovs-vsctl list-br | grep -q "$br_name"; then
+		ovs-vsctl del-br "$br_name"
+	else
+		echo "网桥 $br_name 不存在，无需删除。"
+	fi
+
+}
+
+containers=("aix" "solaris" "gemini" "gateway" "netb" "sun" "svr4" "bsdi" "slip")
+networks=("slipside" "bsdiside" "netbside" "sunside" "gatewayin" "gatewayout")
+bridges=("net1" "net2")
+
+for container_name in "${containers[@]}"; do
+	delete_container $container_name
+done
+
+for network in "${network[@]}"; do
+	delete_network $network
+done
+
+for bridge in "${bridges[@]}"; do
+	delete_br $bridge
+done
+
+echo "create all containers"
 docker run --privileged --network none --name aix -d ${imagename}
 docker run --privileged --network none --name solaris -d ${imagename}
 docker run --privileged --network none --name gemini -d ${imagename}
@@ -16,23 +63,23 @@ docker run --privileged --network none --name slip -d ${imagename}
 
 # 创建两个网桥，代表两个二层网络
 ovs-vsctl add-br net1
-ip link set dev net1 up
+ip link set net1 up
 ovs-vsctl add-br net2
-ip link set dev net2 up
-i#将所有的节点连接到两个网络
+ip link set net2 up
+#将所有的节点连接到两个网络
 echo "connect all containers to bridges"
 
-chmod +x ./setupdocker
+chmod +x ./pipework
 
-./setupdocker net1 aix 140.252.1.92/24
-./setupdocker net1 solaris 140.252.1.32/24
-./setupdocker net1 gemini 140.252.1.11/24
-./setupdocker net1 gateway 140.252.1.4/24
-./setupdocker net1 netb 140.252.1.183/24
+./pipework net1 aix 140.252.1.92/24
+./pipework net1 solaris 140.252.1.32/24
+./pipework net1 gemini 140.252.1.11/24
+./pipework net1 gateway 140.252.1.4/24
+./pipework net1 netb 140.252.1.183/24
 
-./setupdocker net2 bsdi 140.252.13.35/27
-./setupdocker net2 sun 140.252.13.33/27
-./setupdocker net2 svr4 140.252.13.34/27
+./pipework net2 bsdi 140.252.13.35/27
+./pipework net2 sun 140.252.13.33/27
+./pipework net2 svr4 140.252.13.34/27
 
 #添加从slip到bsdi的p2p网络
 echo "add p2p from slip to bsdi"
@@ -46,7 +93,7 @@ ln -s "$CONTAINER_NS_1" "/var/run/netns/$DOCKERPID1"
 ip link set slipside netns ${DOCKERPID1}
 
 #把另一个塞到bsdi的网络的namespace里面
-CONTAINER_NS_2$(docker inspect --format='{{ .NetworkSettings.SandboxKey }}' bsdi)
+CONTAINER_NS_2=$(docker inspect --format='{{ .NetworkSettings.SandboxKey }}' bsdi)
 DOCKERPID2=$(basename $CONTAINER_NS_2)
 ln -s "$CONTAINER_NS_2" "/var/run/netns/$DOCKERPID2"
 ip link set bsdiside netns ${DOCKERPID2}
