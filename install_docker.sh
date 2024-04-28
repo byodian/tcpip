@@ -1,11 +1,20 @@
 #!/bin/bash
 
+set -e
+
 COLOR_SUCC="\e[92m"
 COLOR_NONE="\e[0m"
 COLOR_ERROR="\e[38;5;198m"
 
+# Succeed if the given utility is installed. Fail otherwise.
+# For explanations about `which` vs `type` vs `command`, see:
+# http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script/677212#677212
+installed () {
+  command -v "$1" >/dev/null 2>&1
+}
+
 install_docker () {
-    if ! [ -x "$(command -v docker)"]; then
+    if ! installed docker; then
         # Set up the repository
         sudo apt-get update
         sudo apt-get -y install \
@@ -27,9 +36,11 @@ install_docker () {
 
         # Install Docker Engine
         sudo apt-get update
-        sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         sudo docker run hello-world
     else
         echo -e "${COLOR_SUCC}DOCKER CE 已经安装成功了 ${COLOR_NONE}"
     fi
 }
+
+install_docker
