@@ -1,54 +1,13 @@
 #!/bin/bash
 
-set -e
+#set -e
 
 publiceth=$1
 imagename=$2
 
-delete_container () {
-	container_name="$1"
-	if docker ps -a --format '{{.Names}}' | grep -q "$container_name"; then
-		docker rm -f "$container_name"
-	else
-		echo "容器 $container_name 不存在，无需删除"
-	fi
+chmod +x ./clean.sh
+./clean.sh
 
-}
-
-delete_network() {
-	network_name="$1"
-	if ip link show | grep -q "$network_name"; then
-		ip link delete dev "$network_name"
-	else
-		echo "网络 $network_name 不存在，无需删除。"
-	fi
-}
-
-delete_br() {
-	br_name="$1"
-	if ovs-vsctl list-br | grep -q "$br_name"; then
-		ovs-vsctl del-br "$br_name"
-	else
-		echo "网桥 $br_name 不存在，无需删除。"
-	fi
-
-}
-
-containers=("aix" "solaris" "gemini" "gateway" "netb" "sun" "svr4" "bsdi" "slip")
-networks=("slipside" "bsdiside" "netbside" "sunside" "gatewayin" "gatewayout")
-bridges=("net1" "net2")
-
-for container_name in "${containers[@]}"; do
-	delete_container $container_name
-done
-
-for network in "${network[@]}"; do
-	delete_network $network
-done
-
-for bridge in "${bridges[@]}"; do
-	delete_br $bridge
-done
 
 echo "create all containers"
 docker run --privileged --network none --name aix -d ${imagename}
