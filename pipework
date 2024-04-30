@@ -67,7 +67,6 @@ else
 fi
 
 # If it's a bridge, we need to create a veth pair
-echo "$IFNAME $IFTYPE $BYTYPE" 
 [ "$IFTYPE" = bridge ] && {
 	LOCAL_IFNAME="v${CONTAINER_IFNAME}1${CONTAINER_NAME}"
 	GUEST_IFNAME="v${CONTAINER_IFNAME}2${CONTAINER_NAME}"
@@ -83,7 +82,6 @@ echo "$IFNAME $IFTYPE $BYTYPE"
 			ip link set "$LOCAL_IFNAME" master "$IFNAME"
 			;;
 		openvswitch)
-			ovs-vsctl del-port "$IFNAME" "$LOCAL_IFNAME" > /dev/null 2>&1
 			ovs-vsctl add-port "$IFNAME" "$LOCAL_IFNAME"
 			;;
 	esac
@@ -97,6 +95,9 @@ ip netns exec "$CONTAINER_NS_ID" ip link set "$GUEST_IFNAME" name "$CONTAINER_IF
 
 # setting container network interface ip
 ip netns exec "$CONTAINER_NS_ID" ip addr add "$IPADDR" dev "$CONTAINER_IFNAME"
+
+# setting container network interface up
+ip netns exec "$CONTAINER_NS_ID" ip link set "$CONTAINER_IFNAME" up
 
 # Give our ARP neighbors a nudge about the new interface
 if installed arping; then

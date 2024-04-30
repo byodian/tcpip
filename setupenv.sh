@@ -1,30 +1,40 @@
 #!/bin/bash
 
-#set -e
+set -e
 
 publiceth=$1
 imagename=$2
 
+#预配置环境
+systemctl stop ufw
+systemctl disable ufw
+
+/sbin/iptables -P FORWARD ACCEPT
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+sysctl -p
+/sbin/iptables -P FORWARD ACCEPT
+
 chmod +x ./clean.sh
 ./clean.sh
 
-
 echo "create all containers"
-docker run --privileged --network none --name aix -d ${imagename}
-docker run --privileged --network none --name solaris -d ${imagename}
-docker run --privileged --network none --name gemini -d ${imagename}
-docker run --privileged --network none --name gateway -d ${imagename}
-docker run --privileged --network none --name netb -d ${imagename}
-docker run --privileged --network none --name sun -d ${imagename}
-docker run --privileged --network none --name svr4 -d ${imagename}
-docker run --privileged --network none --name bsdi -d ${imagename}
-docker run --privileged --network none --name slip -d ${imagename}
+docker run --rm --privileged --network none --name aix -d ${imagename}
+docker run --rm --privileged --network none --name solaris -d ${imagename}
+docker run --rm --privileged --network none --name gemini -d ${imagename}
+docker run --rm --privileged --network none --name gateway -d ${imagename}
+docker run --rm --privileged --network none --name netb -d ${imagename}
+docker run --rm --privileged --network none --name sun -d ${imagename}
+docker run --rm --privileged --network none --name svr4 -d ${imagename}
+docker run --rm --privileged --network none --name bsdi -d ${imagename}
+docker run --rm --privileged --network none --name slip -d ${imagename}
 
 # 创建两个网桥，代表两个二层网络
 ovs-vsctl add-br net1
 ip link set net1 up
 ovs-vsctl add-br net2
 ip link set net2 up
+
 #将所有的节点连接到两个网络
 echo "connect all containers to bridges"
 
@@ -100,8 +110,8 @@ ip link set sunside netns ${DOCKERPID3}
 #另一面塞到netb的网络的namespace里面
 CONTAINER_NS_4=$(docker inspect --format='{{ .NetworkSettings.SandboxKey }}' netb)
 DOCKERPID4=$(basename $CONTAINER_NS_4)
-ln -s "$CONTAINER_NS_3" "/var/run/netns/$DOCKERPID3"
-ip link set netbside netns ${DOCKERPID3}
+ln -s "$CONTAINER_NS_4" "/var/run/netns/$DOCKERPID4"
+ip link set netbside netns ${DOCKERPID4}
 
 #给sun里面的网卡添加地址
 docker exec -it sun ip addr add 140.252.1.29/24 dev sunside
@@ -192,7 +202,7 @@ docker exec -it gateway ip addr add 140.252.104.2/24 dev gatewayin
 docker exec -it gateway ip link set gatewayin up
 
 #在gateway里面，对外访问的默认路由是140.252.104.1/24
-docker exec -it gateway ip route add default via 140.252.104.1 dev gatewayin
+docker exec -it gateway ip route add default via 141.252.104.1 dev gatewayin
 
 iptables -t nat -A POSTROUTING -o ${publiceth} -j MASQUERADE
 ip route add 140.252.13.32/27 via 140.252.104.2 dev gatewayout
