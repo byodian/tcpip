@@ -53,12 +53,12 @@
    sysctl -p
    /sbin/iptables -P FORWARD ACCEPT
    ````
-  - /proc/sys/net/ipv4/ip_forward 值为1时，启用 IP 转发功能，Linux 主机将转发经过它的包，而不仅仅是处理发往自己的包。
+  - `/proc/sys/net/ipv4/ip_forward` 值为1时，启用 IP 转发功能，Linux 主机将转发经过它的包，而不仅仅是处理发往自己的包。
   
-  - iptables 的 FORWARD 链默认策略设置为 ACCEPT，这意味着 Linux 主机将允许所有需要转发的数据包通过。在配置 Linux 主机作为网络路由器时，必须确保 FORWARD 链的默认策略是 ACCEPT，以确保它可以正确转发数据包。iptables 有三个主要的默认策略链：
-    - INPUT：处理目标地址是本机的数据包。
-    - OUTPUT：处理源地址是本机的数据包。
-    - FORWARD：处理需要转发的数据包（即不是发往本机或来自本机的数据包）。
+  - iptables 的 `FORWARD` 链默认策略设置为 `ACCEPT`，这意味着 Linux 主机将允许所有需要转发的数据包通过。在配置 Linux 主机作为网络路由器时，必须确保 `FORWARD` 链的默认策略是 `ACCEPT`，以确保它可以正确转发数据包。iptables 有三个主要的默认策略链：
+    - `INPUT`：处理目标地址是本机的数据包。
+    - `OUTPUT`：处理源地址是本机的数据包。
+    - `FORWARD`：处理需要转发的数据包（即不是发往本机或来自本机的数据包）。
       sysctl -p 加载 sysctl 配置文件使其生效，在这里它确保之前设置的 IP 这发功能立即生效。sysctl -p 命令会重新加载所有在 /etc/sysctl.conf 中定义的内核参数，包括 IP 转发。
       sysctl 是一个 Linux 命令，用于在运行时修改内核参数。它允许你查看、设置和调整内核运行的各种参数。这些参数可以影响系统的性能、网络、安全性等方面。
 
@@ -68,11 +68,48 @@
    cd tcpip
    docker build -f ./docker/Dockerfile -t ssh_server:tcpip ./docker
    chmod +x setupenv.sh
-   ./setupenv.sh ens33 ssh_server:tcpip # ens33 虚拟机网卡名称
+
+   # ens33 虚拟机网卡名称 # ssh_server:tcpip 镜像名称
+   ./setupenv.sh ens33 ssh_server:tcpip 
    ```
+
 ## 网络拓扑图
 
 setupenv.sh 脚本启动的网络拓扑图
 
 <img width="632" alt="网络拓扑图" src="https://github.com/byodian/tcpip/assets/26178657/fee74527-f864-42b6-8297-09d4e927001d">
 
+## 测试命令
+```bash
+# slip P2P 网络访问 net2子网
+docker exec -it slip ping 140.252.13.66
+docker exec -it slip ping 140.252.13.33
+
+# slip P2P 网络访问 net1 子网
+docker exec -it slip ping 140.252.1.92
+docker exec -it slip ping 140.252.1.4
+
+# slip P2P 网络访问外部网络
+docker exec -it slip ping 8.8.8.8
+
+# net1 子网访问 slip P2P 网络
+docker exec -it aix ping 140.252.13.65
+
+# net1 子网访问外部网络
+docker exec -it aix ping 8.8.8.8
+
+# net2 子网访问 slip P2P 网络
+docker exec -it sun ping 140.252.13.65
+
+# net2 子网访问外部网络
+docker exec -it sun ping 8.8.8.8
+
+# 查看 NAT 规则
+iptables -t nat -L POSTROUTING -n -v
+
+# 查看转发规则
+sudo iptables -L FORWARD -n -v
+
+# 添加 NAT 规则
+iptables -t nat -D POSTROUTING -o ens33 -j MASQUERADE
+```
