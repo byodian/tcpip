@@ -21,7 +21,7 @@
    apt-get -y install arping
    ```
 
-5. 准备 SSH Server 镜像 [Dockerfile](./docker/Dockefile)
+5. 准备 SSH Server 镜像 [Dockerfile](./Dockefile)
    ```Dockerfile
    FROM ubuntu:22.04
     
@@ -66,7 +66,7 @@
    ```bash
    git clone https://github.com/byodian/tcpip.git
    cd tcpip
-   docker build -f ./docker/Dockerfile -t ssh_server:tcpip ./docker
+   docker build  -t ssh_server:tcpip .
    chmod +x setupenv.sh
 
    # ens33 虚拟机网卡名称 # ssh_server:tcpip 镜像名称
