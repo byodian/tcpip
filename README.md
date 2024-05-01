@@ -77,7 +77,11 @@
 
 setupenv.sh 脚本启动的网络拓扑图
 
+### 简单版
 <img width="632" alt="网络拓扑图" src="https://github.com/byodian/tcpip/assets/26178657/fee74527-f864-42b6-8297-09d4e927001d">
+
+### 复杂版
+<img alt="网络拓扑图复杂版" src="./tcpip.topo.png">
 
 ## 测试命令
 ```bash
