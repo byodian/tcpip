@@ -202,7 +202,7 @@ docker exec -it gateway ip addr add 140.252.104.2/24 dev gatewayin
 docker exec -it gateway ip link set gatewayin up
 
 #在gateway里面，对外访问的默认路由是140.252.104.1/24
-docker exec -it gateway ip route add default via 141.252.104.1 dev gatewayin
+docker exec -it gateway ip route add default via 140.252.104.1 dev gatewayin
 
 iptables -t nat -A POSTROUTING -o ${publiceth} -j MASQUERADE
 ip route add 140.252.13.32/27 via 140.252.104.2 dev gatewayout
