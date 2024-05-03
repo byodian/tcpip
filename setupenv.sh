@@ -18,7 +18,7 @@ sysctl -p
 chmod +x ./clean.sh
 ./clean.sh
 
-echo "create all containers"
+echo "create all containers" 
 docker run --rm --privileged --network none --name aix -d ${imagename}
 docker run --rm --privileged --network none --name solaris -d ${imagename}
 docker run --rm --privileged --network none --name gemini -d ${imagename}
@@ -208,3 +208,4 @@ iptables -t nat -A POSTROUTING -o ${publiceth} -j MASQUERADE
 ip route add 140.252.13.32/27 via 140.252.104.2 dev gatewayout
 ip route add 140.252.13.64/27 via 140.252.104.2 dev gatewayout
 ip route add 140.252.1.0/24 via 140.252.104.2 dev gatewayout
+echo "end of setupenv.sh"
