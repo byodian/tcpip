@@ -1,0 +1,12 @@
+
+# Docker container hosts
+# IP Address      Hostname 
+140.252.1.92      aix
+140.252.1.32      solaris
+140.252.1.11      gemini
+140.252.1.4       gateway
+140.252.1.183     netb
+140.252.13.35     bsdi
+140.252.13.33     sun
+140.252.13.34     svr4
+140.252.13.65     slip

@@ -18,6 +18,10 @@ RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/
 # 设置 LANG 环境变量，避免 SSH 登录时出现警告信息
 ENV LANG C.UTF-8
 
+# 复制本地 hosts 内容追加到 /etc/hosts
+COPY hosts /tmp/hosts
+RUN cat /tmp/hosts >> /etc/hosts
+
 # 指定容器启动时执行的命令
 ENTRYPOINT ["/usr/sbin/sshd", "-D"]
 
