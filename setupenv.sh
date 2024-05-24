@@ -19,15 +19,15 @@ chmod +x ./clean.sh
 ./clean.sh
 
 echo "create all containers" 
-docker run --rm --privileged --network none --name aix -d ${imagename}
-docker run --rm --privileged --network none --name solaris -d ${imagename}
-docker run --rm --privileged --network none --name gemini -d ${imagename}
-docker run --rm --privileged --network none --name gateway -d ${imagename}
-docker run --rm --privileged --network none --name netb -d ${imagename}
-docker run --rm --privileged --network none --name sun -d ${imagename}
-docker run --rm --privileged --network none --name svr4 -d ${imagename}
-docker run --rm --privileged --network none --name bsdi -d ${imagename}
-docker run --rm --privileged --network none --name slip -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/aix:/data/logs:rw --name aix -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/solaris:/data/logs:rw --name solaris -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/gemini:/data/logs:rw --name gemini -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/gateway:/data/logs:rw --name gateway -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/netb:/data/logs:rw --name netb -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/sun:/data/logs:rw --name sun -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/svr4:/data/logs:rw --name svr4 -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/bsdi:/data/logs:rw --name bsdi -d ${imagename}
+docker run --rm --privileged --network none -v /data/logs/slip:/data/logs:rw --name slip -d ${imagename}
 
 # 创建两个网桥，代表两个二层网络
 ovs-vsctl add-br net1
