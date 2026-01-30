@@ -19,8 +19,7 @@ RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/
 ENV LANG C.UTF-8
 
 # 复制本地 hosts 内容追加到 /etc/hosts
-COPY hosts /tmp/hosts
-RUN cat /tmp/hosts >> /etc/hosts
+COPY hosts /etc/hosts
 
 # 指定容器启动时执行的命令
 ENTRYPOINT ["/usr/sbin/sshd", "-D"]
