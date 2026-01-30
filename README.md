@@ -15,45 +15,37 @@
    ```
 4. Open vSwitch
    
-   ```bash
-   apt-get -y install openvswitch-common openvswitch-dbg openvswitch-switch python-openvswitch openvswitch-ipsec openvswitch-pki openvswitch-vtep
+   ```diff
+   - apt-get -y install openvswitch-common openvswitch-dbg openvswitch-switch python-openvswitch openvswitch-ipsec openvswitch-pki openvswitch-vtep
+   + apt-get -y install openvswitch-common openvswitch-switch openvswitch-ipsec openvswitch-pki openvswitch-vtep
    apt-get -y install bridge-utils
    apt-get -y install arping
    ```
-
-5. 准备 SSH Server 镜像 [Dockerfile](./Dockefile)
-   ```Dockerfile
-   FROM ubuntu:22.04
-    
-   # 安装 OpenSSH 服务器、网络工具
-   RUN apt-get -y update && apt-get install -y iproute2 iputils-arping net-tools tcpdump curl telnet iputils-tracepath traceroute openssh-server iputils-ping
-    
-   # 创建 SSH 服务器所需的目录
-   RUN mkdir /var/run/sshd
-    
-   # 设置 root 密码
-   RUN echo 'root:1212' | chpasswd
-    
-   # 允许 root 用户登录
-   RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-    
-   # 允许通过密码登录
-   RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-    
-   # 设置 LANG 环境变量，避免 SSH 登录时出现警告信息
-   ENV LANG C.UTF-8
-    
-   # 指定容器启动时执行的命令
-   ENTRYPOINT ["/usr/sbin/sshd", "-D"]
-   ```
-
+   
 6. 配置虚拟机网络包转发功能
+   在现代的 Linux 系统中，/etc/sysctl.d/ 目录被用于存储多个 .conf 配置文件，代替单个的 /etc/sysctl.conf 文件。你可以在该目录下创建一个新的配置文件，例如：
+   
    ```bash
-   echo 1 > /proc/sys/net/ipv4/ip_forward
-   sysctl -p
-   /sbin/iptables -P FORWARD ACCEPT
+   sudo nano /etc/sysctl.d/99-custom.conf
    ````
-  - `/proc/sys/net/ipv4/ip_forward` 值为1时，启用 IP 转发功能，Linux 主机将转发经过它的包，而不仅仅是处理发往自己的包。
+   
+   在其中添加所需的参数，例如：
+   ```
+   net.ipv4.ip_forward = 1
+   ```
+   
+   然后运行以下命令来应用新的配置：
+   ```
+   sudo sysctl --system
+   ```
+   这会加载 /etc/sysctl.d/ 中的所有配置文件。
+   
+   允许通过本机转发的所有流量
+   ```
+   /sbin/iptables -P FORWARD ACCEPT
+   ```
+   
+  - `cat /proc/sys/net/ipv4/ip_forward` 值为1时，表示启用 IP 转发功能，Linux 主机将转发经过它的包，而不仅仅是处理发往自己的包。
   
   - iptables 的 `FORWARD` 链默认策略设置为 `ACCEPT`，这意味着 Linux 主机将允许所有需要转发的数据包通过。在配置 Linux 主机作为网络路由器时，必须确保 `FORWARD` 链的默认策略是 `ACCEPT`，以确保它可以正确转发数据包。iptables 有三个主要的默认策略链：
     - `INPUT`：处理目标地址是本机的数据包。
